@@ -1,53 +1,50 @@
 package com.example;
 
+import com.google.inject.Inject;
 import com.google.inject.Provides;
-import javax.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.ChatMessageType;
-import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.config.ConfigManager;
-import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.overlay.OverlayManager;
 
-@Slf4j
 @PluginDescriptor(
-	name = "Example"
+        name = "Invalid Movement",
+        description = "Display invalid movement blocked tiles",
+        tags = {"invalid", "blocked", "movement", "tile", "flags"}
 )
 public class ExamplePlugin extends Plugin
 {
-	@Inject
-	private Client client;
+    @Inject
+    private InvalidMovementMapOverlay mapOverlay;
 
-	@Inject
-	private ExampleConfig config;
+    @Inject
+    private InvalidMovementSceneOverlay sceneOverlay;
 
-	@Override
-	protected void startUp() throws Exception
-	{
-		log.debug("Example started!");
-	}
+    @Inject
+    private InvalidMovementMinimapOverlay minimapOverlay;
 
-	@Override
-	protected void shutDown() throws Exception
-	{
-		log.debug("Example stopped!");
-	}
+    @Inject
+    private OverlayManager overlayManager;
 
-	@Subscribe
-	public void onGameStateChanged(GameStateChanged gameStateChanged)
-	{
-		if (gameStateChanged.getGameState() == GameState.LOGGED_IN)
-		{
-			client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Example says " + config.greeting(), null);
-		}
-	}
+    @Provides
+    ExampleConfig provideConfig(ConfigManager configManager)
+    {
+        return configManager.getConfig(ExampleConfig.class);
+    }
 
-	@Provides
-	ExampleConfig provideConfig(ConfigManager configManager)
-	{
-		return configManager.getConfig(ExampleConfig.class);
-	}
+    @Override
+    protected void startUp() throws Exception
+    {
+        overlayManager.add(mapOverlay);
+        overlayManager.add(sceneOverlay);
+        overlayManager.add(minimapOverlay);
+    }
+
+    @Override
+    protected void shutDown() throws Exception
+    {
+        overlayManager.remove(mapOverlay);
+        overlayManager.remove(sceneOverlay);
+        overlayManager.remove(minimapOverlay);
+    }
 }
